@@ -7,10 +7,11 @@ import userEvent from '@testing-library/user-event'
 import Login from '../../components/login'
 import faker from 'faker'
 
-const buildLoginForm = ({username, password}) => {
+const buildLoginForm = overrides => {
   return {
-    username: username || faker.internet.userName(),
-    password: password || faker.internet.password(),
+    username: faker.internet.userName(),
+    password: faker.internet.password(),
+    ...overrides,
   }
 }
 
