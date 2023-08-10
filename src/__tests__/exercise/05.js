@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import {build, fake} from '@jackfranklin/test-data-bot'
 import Login from '../../components/login-submission'
 import {setupServer} from 'msw/lib/node'
-import {rest} from 'msw'
+import {handlers} from 'test/server-handlers'
 
 const buildLoginForm = build({
   fields: {
@@ -16,19 +16,7 @@ const buildLoginForm = build({
   },
 })
 
-const server = setupServer(
-  rest.post(
-    'https://auth-provider.example.com/api/login',
-    async (req, res, ctx) => {
-      if (!req.body.username) {
-        return res(ctx.status(400), ctx.json({message: 'username required'}))
-      } else if (!req.body.password) {
-        return res(ctx.status(400), ctx.json({message: 'password required'}))
-      }
-      return res(ctx.status(200), ctx.json({username: req.body.username}))
-    },
-  ),
-)
+const server = setupServer(...handlers)
 
 beforeAll(() => server.listen())
 afterAll(() => server.close())
@@ -43,4 +31,16 @@ test(`logging in displays the user's username`, async () => {
 
   await waitForElementToBeRemoved(() => screen.getByLabelText(/loading.../i))
   expect(await screen.findByText(username)).toBeInTheDocument()
+})
+
+test(`ommiting the password results in an error`, async () => {
+  render(<Login />)
+  const {username} = buildLoginForm()
+
+  await userEvent.type(screen.getByLabelText(/username/i), username)
+  await userEvent.click(screen.getByRole('button', {name: /submit/i}))
+
+  await waitForElementToBeRemoved(() => screen.getByLabelText(/loading/i))
+
+  expect(screen.getByRole('alert')).toHaveTextContent(/password required/i) // it is better to get by role and then toHaveTextContent than getByText
 })
