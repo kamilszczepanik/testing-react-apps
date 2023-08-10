@@ -42,5 +42,7 @@ test(`ommiting the password results in an error`, async () => {
 
   await waitForElementToBeRemoved(() => screen.getByLabelText(/loading/i))
 
-  expect(screen.getByRole('alert')).toHaveTextContent(/password required/i) // it is better to get by role and then toHaveTextContent than getByText
+  expect(screen.getByRole('alert').textContent).toMatchInlineSnapshot(
+    `"password required"`,
+  )
 })
